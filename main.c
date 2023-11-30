@@ -57,17 +57,26 @@
 #ifdef COMPONENT_PSOC4100SMAX
 #define CAPSENSE_MSC0_INTR_PRIORITY      (3u)
 #define CAPSENSE_MSC1_INTR_PRIORITY      (3u)
-#define MSC_CAPSENSE_WIDGET_INACTIVE     (0u)
-#else /* COMPONENT_PSOC4100SP, COMPONENT_PSOC4000S */
+#elif COMPONENT_PSOC4000T
+#define CAPSENSE_MSC0_INTR_PRIORITY      (3u)
+#else /* COMPONENT_PSOC4100SP, COMPONENT_PSOC4000S and COMPONENT_PSOC4100SP256KB */
 #define CAPSENSE_INTR_PRIORITY           (3u)
 #endif
+#define CAPSENSE_WIDGET_INACTIVE         (0u)
 #define CY_ASSERT_FAILED                 (0u)
 
-/* EZI2C interrupt priority must be higher than CapSense interrupt */
+/* EZI2C interrupt priority must be higher than CAPSENSE interrupt */
 #define EZI2C_INTR_PRIORITY              (2u)
+
+#ifdef COMPONENT_PSOC4000T
+/* Boolean constants */
+#define LED_ON         (1u)
+#define LED_OFF        (0u)
+#else /* COMPONENT_PSOC4100SMAX, COMPONENT_PSOC4100SP, COMPONENT_PSOC4000S and COMPONENT_PSOC4100SP256KB */
 /* Boolean constants */
 #define LED_ON         (0u)
 #define LED_OFF        (1u)
+#endif
 
 #ifdef COMPONENT_PSOC4100SP
 /* Define the number of slider LEDs in the board. The number of LEDs is equal
@@ -116,7 +125,9 @@ static void initialize_capsense(void);
 #ifdef COMPONENT_PSOC4100SMAX
 static void capsense_msc0_isr(void);
 static void capsense_msc1_isr(void);
-#else /* COMPONENT_PSOC4100SP, COMPONENT_PSOC4000S */
+#elif COMPONENT_PSOC4000T
+static void capsense_msc0_isr(void);
+#else /* COMPONENT_PSOC4100SP, COMPONENT_PSOC4000S and COMPONENT_PSOC4100SP256KB*/
 static void capsense_isr(void);
 #endif
 static void ezi2c_isr(void);
@@ -130,7 +141,7 @@ static void detect_touch_and_drive_led(void);
  * Summary:
  *  System entrance point. This function performs
  *  - initial setup of device
- *  - initialize EZI2C and CapSense peripherals
+ *  - initialize EZI2C and CAPSENSE peripherals
  *  - initialize tuner communication
  *  - scan touch input continuously
  *
@@ -157,13 +168,13 @@ int main(void)
     /* Initialize EZI2C */
     initialize_capsense_tuner();
 
-    /* Initialize MSC CapSense */
+    /* Initialize MSC CAPSENSE */
     initialize_capsense();
 
-#ifdef COMPONENT_PSOC4100SMAX
+#if defined COMPONENT_PSOC4100SMAX || defined COMPONENT_PSOC4000T
     /* Start the first scan */
     Cy_CapSense_ScanAllSlots(&cy_capsense_context);
-#else /* COMPONENT_PSOC4100SP, COMPONENT_PSOC4000S */
+#else /* COMPONENT_PSOC4100SP, COMPONENT_PSOC4000S and COMPONENT_PSOC4100SP256KB*/
     /* Initiate first scan */
     Cy_CapSense_ScanAllWidgets(&cy_capsense_context);
 #endif
@@ -178,13 +189,13 @@ int main(void)
             /* Turns LED ON/OFF based on button status */
             detect_touch_and_drive_led();
 
-            /* Establishes synchronized communication with the CapSense Tuner tool */
+            /* Establishes synchronized communication with the CAPSENSE Tuner tool */
             Cy_CapSense_RunTuner(&cy_capsense_context);
 
-#ifdef COMPONENT_PSOC4100SMAX
+#if defined COMPONENT_PSOC4100SMAX || defined COMPONENT_PSOC4000T
             /* Start the next scan */
             Cy_CapSense_ScanAllSlots(&cy_capsense_context);
-#else /* COMPONENT_PSOC4100SP, COMPONENT_PSOC4000S */
+#else /* COMPONENT_PSOC4100SP, COMPONENT_PSOC4000S and COMPONENT_PSOC4100SP256KB*/
             /* Start the next scan */
             Cy_CapSense_ScanAllWidgets(&cy_capsense_context);
 #endif
@@ -197,7 +208,7 @@ int main(void)
 * Function Name: initialize_capsense
 ********************************************************************************
 * Summary:
-*  This function initializes the CapSense and configures the CapSense
+*  This function initializes the CAPSENSE and configures the CAPSENSE
 *  interrupt.
 *
 *******************************************************************************/
@@ -206,21 +217,28 @@ static void initialize_capsense(void)
     cy_capsense_status_t status = CY_CAPSENSE_STATUS_SUCCESS;
 
 #ifdef COMPONENT_PSOC4100SMAX
-    /* CapSense interrupt configuration MSC 0 */
+    /* CAPSENSE interrupt configuration MSC 0 */
     const cy_stc_sysint_t capsense_msc0_interrupt_config =
     {
         .intrSrc = CY_MSC0_IRQ,
         .intrPriority = CAPSENSE_MSC0_INTR_PRIORITY,
     };
 
-    /* CapSense interrupt configuration MSC 1 */
+    /* CAPSENSE interrupt configuration MSC 1 */
     const cy_stc_sysint_t capsense_msc1_interrupt_config =
     {
         .intrSrc = CY_MSC1_IRQ,
         .intrPriority = CAPSENSE_MSC1_INTR_PRIORITY,
     };
-#else /* COMPONENT_PSOC4100SP, COMPONENT_PSOC4000S */
-    /* CapSense interrupt configuration */
+#elif COMPONENT_PSOC4000T
+    /* CAPSENSE interrupt configuration MSCLP 0 */
+    const cy_stc_sysint_t capsense_msc0_interrupt_config =
+    {
+        .intrSrc = CY_MSCLP0_LP_IRQ,
+        .intrPriority = CAPSENSE_MSC0_INTR_PRIORITY,
+    };
+#else /* COMPONENT_PSOC4100SP, COMPONENT_PSOC4000S and COMPONENT_PSOC4100SP256KB*/
+    /* CAPSENSE interrupt configuration */
     const cy_stc_sysint_t CapSense_interrupt_config =
     {
         .intrSrc = CYBSP_CSD_IRQ,
@@ -234,30 +252,36 @@ static void initialize_capsense(void)
     if (CY_CAPSENSE_STATUS_SUCCESS == status)
     {
 #ifdef COMPONENT_PSOC4100SMAX
-        /* Initialize CapSense interrupt for MSC 0 */
+        /* Initialize CAPSENSE interrupt for MSC 0 */
         Cy_SysInt_Init(&capsense_msc0_interrupt_config, capsense_msc0_isr);
         NVIC_ClearPendingIRQ(capsense_msc0_interrupt_config.intrSrc);
         NVIC_EnableIRQ(capsense_msc0_interrupt_config.intrSrc);
 
-        /* Initialize CapSense interrupt for MSC 1 */
+        /* Initialize CAPSENSE interrupt for MSC 1 */
         Cy_SysInt_Init(&capsense_msc1_interrupt_config, capsense_msc1_isr);
         NVIC_ClearPendingIRQ(capsense_msc1_interrupt_config.intrSrc);
         NVIC_EnableIRQ(capsense_msc1_interrupt_config.intrSrc);
-#else /* COMPONENT_PSOC4100SP, COMPONENT_PSOC4000S */
+#elif COMPONENT_PSOC4000T
+        /* Initialize CAPSENSE interrupt for MSC 0 */
+        Cy_SysInt_Init(&capsense_msc0_interrupt_config, capsense_msc0_isr);
+        NVIC_ClearPendingIRQ(capsense_msc0_interrupt_config.intrSrc);
+        NVIC_EnableIRQ(capsense_msc0_interrupt_config.intrSrc);
+
+#else /* COMPONENT_PSOC4100SP, COMPONENT_PSOC4000S and COMPONENT_PSOC4100SP256KB */
         Cy_SysInt_Init(&CapSense_interrupt_config, capsense_isr);
         NVIC_ClearPendingIRQ(CapSense_interrupt_config.intrSrc);
         NVIC_EnableIRQ(CapSense_interrupt_config.intrSrc);
 #endif
 
-        /* Initialize the CapSense firmware modules */
+        /* Initialize the CAPSENSE firmware modules */
         status = Cy_CapSense_Enable(&cy_capsense_context);
     }
 
     if(status != CY_CAPSENSE_STATUS_SUCCESS)
     {
         /* This status could fail before tuning the sensors correctly.
-         * Ensure that this function passes after the CapSense sensors are tuned
-         * as per procedure give in the Readme.md file */
+         * Ensure that this function passes after the CAPSENSE sensors are tuned
+         * as per procedure given in the README.md file */
     }
 }
 
@@ -267,7 +291,7 @@ static void initialize_capsense(void)
 * Function Name: capsense_msc0_isr
 ********************************************************************************
 * Summary:
-*  Function for handling interrupts from CapSense MSC0 block.
+*  Function for handling interrupts from CAPSENSE MSC0 block.
 *
 *******************************************************************************/
 static void capsense_msc0_isr(void)
@@ -280,19 +304,32 @@ static void capsense_msc0_isr(void)
 * Function Name: capsense_msc1_isr
 ********************************************************************************
 * Summary:
-*  Function for handling interrupts from CapSense MSC1 block.
+*  Function for handling interrupts from CAPSENSE MSC1 block.
 *
 *******************************************************************************/
 static void capsense_msc1_isr(void)
 {
     Cy_CapSense_InterruptHandler(CY_MSC1_HW, &cy_capsense_context);
 }
-#else /* COMPONENT_PSOC4100SP, COMPONENT_PSOC4000S */
+#elif COMPONENT_PSOC4000T
+/*******************************************************************************
+* Function Name: capsense_msc0_isr
+********************************************************************************
+* Summary:
+*  Function for handling interrupts from CAPSENSE MSC0 block.
+*
+*******************************************************************************/
+static void capsense_msc0_isr(void)
+{
+    Cy_CapSense_InterruptHandler(CY_MSCLP0_HW, &cy_capsense_context);
+}
+
+#else /* COMPONENT_PSOC4100SP, COMPONENT_PSOC4000S and COMPONENT_PSOC4100SP256KB*/
 /*******************************************************************************
  * Function Name: capsense_isr
  ********************************************************************************
  * Summary:
- *  Function for handling interrupts from CapSense block.
+ *  Function for handling interrupts from CAPSENSE block.
  *
  *******************************************************************************/
 static void capsense_isr(void)
@@ -306,7 +343,7 @@ static void capsense_isr(void)
 * Function Name: initialize_capsense_tuner
 ********************************************************************************
 * Summary:
-* EZI2C module to communicate with the CapSense Tuner tool.
+* EZI2C module to communicate with the CAPSENSE Tuner tool.
 *
 *******************************************************************************/
 static void initialize_capsense_tuner(void)
@@ -331,7 +368,7 @@ static void initialize_capsense_tuner(void)
     Cy_SysInt_Init(&ezi2c_intr_config, ezi2c_isr);
     NVIC_EnableIRQ(ezi2c_intr_config.intrSrc);
 
-    /* Set the CapSense data structure as the I2C buffer to be exposed to the
+    /* Set the CAPSENSE data structure as the I2C buffer to be exposed to the
      * master on primary slave address interface. Any I2C host tools such as
      * the Tuner or the Bridge Control Panel can read this buffer but you can
      * connect only one tool at a time.
@@ -353,38 +390,40 @@ static void initialize_capsense_tuner(void)
 *******************************************************************************/
 static void detect_touch_and_drive_led(void)
 {
+#if defined COMPONENT_PSOC4100SMAX || defined COMPONENT_PSOC4100SP256KB || defined COMPONENT_PSOC4000T
+    if(CAPSENSE_WIDGET_INACTIVE != Cy_CapSense_IsWidgetActive(CY_CAPSENSE_BUTTON0_WDGT_ID, &cy_capsense_context))
+    {
+        Cy_GPIO_Write(CYBSP_LED_BTN0_PORT, CYBSP_LED_BTN0_NUM, LED_ON);
+    }
+    else
+    {
+        Cy_GPIO_Write(CYBSP_LED_BTN0_PORT, CYBSP_LED_BTN0_NUM, LED_OFF);
+    }
+
 #ifdef COMPONENT_PSOC4100SMAX
-    if(MSC_CAPSENSE_WIDGET_INACTIVE != Cy_CapSense_IsWidgetActive(CY_CAPSENSE_BUTTON0_WDGT_ID, &cy_capsense_context))
+    if(CAPSENSE_WIDGET_INACTIVE != Cy_CapSense_IsWidgetActive(CY_CAPSENSE_BUTTON1_WDGT_ID, &cy_capsense_context))
     {
-        Cy_GPIO_Write(CYBSP_LED_BTN0_PORT, CYBSP_LED_BTN0_NUM, CYBSP_LED_STATE_ON);
+        Cy_GPIO_Write(CYBSP_LED_BTN1_PORT, CYBSP_LED_BTN1_NUM, LED_ON);
     }
     else
     {
-        Cy_GPIO_Write(CYBSP_LED_BTN0_PORT, CYBSP_LED_BTN0_NUM, CYBSP_LED_STATE_OFF);
+        Cy_GPIO_Write(CYBSP_LED_BTN1_PORT, CYBSP_LED_BTN1_NUM, LED_OFF);
+    }
+#endif
+    if(CAPSENSE_WIDGET_INACTIVE != Cy_CapSense_IsWidgetActive(CY_CAPSENSE_LINEARSLIDER0_WDGT_ID, &cy_capsense_context))
+    {
+        Cy_GPIO_Write(CYBSP_USER_LED_PORT, CYBSP_USER_LED_NUM, LED_ON);
+    }
+    else
+    {
+        Cy_GPIO_Write(CYBSP_USER_LED_PORT, CYBSP_USER_LED_NUM, LED_OFF);
     }
 
-    if(MSC_CAPSENSE_WIDGET_INACTIVE != Cy_CapSense_IsWidgetActive(CY_CAPSENSE_BUTTON1_WDGT_ID, &cy_capsense_context))
-    {
-        Cy_GPIO_Write(CYBSP_LED_BTN1_PORT, CYBSP_LED_BTN1_NUM, CYBSP_LED_STATE_ON);
-    }
-    else
-    {
-        Cy_GPIO_Write(CYBSP_LED_BTN1_PORT, CYBSP_LED_BTN1_NUM, CYBSP_LED_STATE_OFF);
-    }
-
-    if(MSC_CAPSENSE_WIDGET_INACTIVE != Cy_CapSense_IsWidgetActive(CY_CAPSENSE_LINEARSLIDER0_WDGT_ID, &cy_capsense_context))
-    {
-        Cy_GPIO_Write(CYBSP_USER_LED_PORT, CYBSP_USER_LED_NUM, CYBSP_LED_STATE_ON);
-    }
-    else
-    {
-        Cy_GPIO_Write(CYBSP_USER_LED_PORT, CYBSP_USER_LED_NUM, CYBSP_LED_STATE_OFF);
-    }
 #else /* COMPONENT_PSOC4100SP, COMPONENT_PSOC4000S */
     cy_stc_capsense_touch_t* slider_touch_info;
     uint16_t slider_pos;
 
-    /* Turn ON/OFF LEDs based on the status of the corresponding CapSense buttons */
+    /* Turn ON/OFF LEDs based on the status of the corresponding CAPSENSE buttons */
     Cy_GPIO_Write(CYBSP_LED_BTN0_PORT, CYBSP_LED_BTN0_NUM, (Cy_CapSense_IsSensorActive(CY_CAPSENSE_BUTTON0_WDGT_ID, CY_CAPSENSE_BUTTON0_SNS0_ID, &cy_capsense_context) ? LED_ON : LED_OFF ));
     Cy_GPIO_Write(CYBSP_LED_BTN1_PORT, CYBSP_LED_BTN1_NUM, (Cy_CapSense_IsSensorActive(CY_CAPSENSE_BUTTON1_WDGT_ID, CY_CAPSENSE_BUTTON1_SNS0_ID, &cy_capsense_context) ? LED_ON : LED_OFF ));
     Cy_GPIO_Write(CYBSP_LED_BTN2_PORT, CYBSP_LED_BTN2_NUM, (Cy_CapSense_IsSensorActive(CY_CAPSENSE_BUTTON2_WDGT_ID, CY_CAPSENSE_BUTTON2_SNS0_ID, &cy_capsense_context) ? LED_ON : LED_OFF ));
@@ -394,12 +433,12 @@ static void detect_touch_and_drive_led(void)
      */
     if(Cy_CapSense_IsWidgetActive(CY_CAPSENSE_LINEARSLIDER0_WDGT_ID,&cy_capsense_context))
     {
-        /* Get the touch position(centroid) of CapSense Linear Slider */
+        /* Get the touch position(centroid) of CAPSENSE Linear Slider */
         slider_touch_info = Cy_CapSense_GetTouchInfo(CY_CAPSENSE_LINEARSLIDER0_WDGT_ID, &cy_capsense_context);
         slider_pos = slider_touch_info->ptrPosition->x;
 
         /* Turn ON LEDs based on the finger position (centroid) on the
-         * CapSense Linear slider
+         * CAPSENSE Linear slider
          */
         Cy_GPIO_Write(CYBSP_LED_SLD0_PORT, CYBSP_LED_SLD0_NUM, ((slider_pos > CYBSP_LED_SLD0_SLIDER_POS_THRESHOLD) ? LED_ON : LED_OFF));
         Cy_GPIO_Write(CYBSP_LED_SLD1_PORT, CYBSP_LED_SLD1_NUM, ((slider_pos > CYBSP_LED_SLD1_SLIDER_POS_THRESHOLD) ? LED_ON : LED_OFF));
