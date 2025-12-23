@@ -5,11 +5,12 @@ This code example demonstrates the use of the multi-frequency scan (MFS) for PSo
 [View this README on GitHub.](https://github.com/Infineon/mtb-example-psoc4-capsense-multi-frequency-scan)
 
 
-[Provide feedback on this code example.](https://cypress.co1.qualtrics.com/jfe/form/SV_1NTns53sK2yiljn?Q_EED=eyJVbmlxdWUgRG9jIElkIjoiQ0UyMzc2ODciLCJTcGVjIE51bWJlciI6IjAwMi0zNzY4NyIsIkRvYyBUaXRsZSI6IlBTb0MmdHJhZGU7IDQ6IENBUFNFTlNFJnRyYWRlOyBtdWx0aS1mcmVxdWVuY3kgc2NhbiIsInJpZCI6InJhamFubmFnYXV0YSIsIkRvYyB2ZXJzaW9uIjoiMS4xLjAiLCJEb2MgTGFuZ3VhZ2UiOiJFbmdsaXNoIiwiRG9jIERpdmlzaW9uIjoiTUNEIiwiRG9jIEJVIjoiSUNXIiwiRG9jIEZhbWlseSI6IlBTT0MifQ==)
+[Provide feedback on this code example.](https://yourvoice.infineon.com/jfe/form/SV_1NTns53sK2yiljn?Q_EED=eyJVbmlxdWUgRG9jIElkIjoiQ0UyMzc2ODciLCJTcGVjIE51bWJlciI6IjAwMi0zNzY4NyIsIkRvYyBUaXRsZSI6IlBTb0MmdHJhZGU7IDQ6IENBUFNFTlNFJnRyYWRlOyBtdWx0aS1mcmVxdWVuY3kgc2NhbiIsInJpZCI6ImdhdXRhbS5yYWphbm5hQGluZmluZW9uLmNvbSIsIkRvYyB2ZXJzaW9uIjoiMS4xLjEiLCJEb2MgTGFuZ3VhZ2UiOiJFbmdsaXNoIiwiRG9jIERpdmlzaW9uIjoiTUNEIiwiRG9jIEJVIjoiSUNXIiwiRG9jIEZhbWlseSI6IlBTT0MifQ==)
 
 ## Requirements
 
 - [ModusToolbox&trade;](https://www.infineon.com/modustoolbox) v3.1 or later (tested with v3.1)
+- [ModusToolbox&trade; CAPSENSE&trade; and Multi-Sense Pack](https://softwaretools.infineon.com/tools/com.ifx.tb.tool.modustoolboxpackmultisense) for [ModusToolbox&trade;](https://www.infineon.com/modustoolbox) v3.7 or later
 - Board support package (BSP) minimum required version: 3.1.0
 - Programming language: C
 - Associated parts: [PSoC&trade; 4000S, PSoC&trade; 4100S Plus, PSoC&trade; 4100S Max, PSoC&trade; 4500S, and PSoC&trade; 4000T](https://www.infineon.com/cms/en/product/microcontroller/32-bit-psoc-arm-cortex-microcontroller/psoc-4-32-bit-arm-cortex-m0-mcu/)
@@ -33,7 +34,7 @@ This code example demonstrates the use of the multi-frequency scan (MFS) for PSo
 This example uses the board's default configuration. See the kit guide to ensure that the board is configured correctly.
 
 - For [CY8CKIT-045S](https://www.infineon.com/CY8CKIT-045S), populate the resistor R57 in order to inject the external noise to pin P4[4] of the extended header J10. For more details, see the **Rework on CapSense and Additional Multiplexed Pins** section in the [kit guide](https://www.infineon.com/dgdl/Infineon-CY8CKIT-045S_PSoC_4500S_Pioneer_Kit_Guide-UserManual-v01_00-EN.pdf?fileId=8ac78c8c7d0d8da4017d0f0314d21a51).
- 
+
 > **Note:** Some of the PSoC&trade; 4 kits ship with KitProg2 installed. ModusToolbox&trade; requires KitProg3. Before using this code example, make sure that the board is upgraded to KitProg3. The tool and instructions are available in the [Firmware Loader](https://github.com/Infineon/Firmware-loader) GitHub repository. If you do not upgrade, you will see an error like "unable to find CMSIS-DAP device" or "KitProg firmware is out of date".
 
 ## Software setup
@@ -157,15 +158,15 @@ For more details, see the [ModusToolbox&trade; tools package user guide](https:/
       1. Select the application project in the Project Explorer.
 
       2. In the **Quick Panel**, scroll down, and click **\<Application Name> Program (KitProg3_MiniProg4)**.
-	  
+
    </details>
 
    <details><summary><b>In other IDEs</b></summary>
 
    Follow the instructions in your preferred IDE.
-   
+
    </details>
-   
+
    <details><summary><b>Using CLI</b></summary>
 
      From the terminal, execute the `make program` command to build and program the application using the default toolchain to the default target. The default toolchain is specified in the application's Makefile but you can override this value manually:
@@ -180,7 +181,7 @@ For more details, see the [ModusToolbox&trade; tools package user guide](https:/
 
    </details>
 
-3.  Touch the CAPSENSE&trade; buttons and observe that the corresponding LEDs turn ON. 
+3.  Touch the CAPSENSE&trade; buttons and observe that the corresponding LEDs turn ON.
 
 4. Slide your finger over the CAPSENSE&trade; linear slider and observe that the LED1 turns ON.
 
@@ -189,9 +190,9 @@ For more details, see the [ModusToolbox&trade; tools package user guide](https:/
       **Figure 1. Quick Panel**
 
       ![](images/quick-panel.png)
-      
+
       See the "Launch the CAPSENSE&trade; tuner" section from the [ModusToolbox&trade; CAPSENSE&trade; tuner guide](https://www.infineon.com/ModusToolboxCapSenseTuner).
-      
+
 6. Go to **Tools** > **Tuner Communication Setup** and set the parameters as shown in Figure 2, then click **OK**.
 
       **Figure 2. Tuner Communication Setup**
@@ -215,17 +216,17 @@ For more details, see the [ModusToolbox&trade; tools package user guide](https:/
       **Figure 5. CAPSENSE&trade; Widget View**
 
       ![](images/tuner-window.png)
-      
+
 9. Observe from the Widget/Sensor parameters section in the CAPSENSE&trade; tuner window that the CAPSENSE&trade; peripheral calculates three different Compensation/Modulator IDAC values for each of the channels, as shown in Figure 6 and Figure 7.
 
       **Figure 6. Three different Compensation IDAC values for the CSX Button**
 
       ![](images/cdac-csx.png)
-      
+
       **Figure 7. Three different Compensation IDAC values for the CSD linear slider**
 
       ![](images/cdac-csd.png)
-      
+
 10. Obserse the rawcounts and baseline for three different channels in the graph view as shown in Figure 8.
 
       **Figure 8. Graph View of CAPSENSE&trade; tuner**
@@ -241,13 +242,13 @@ This section explains how to inject extreme external noise into the system and s
       **Figure 9. Test circuit to inject external noise into the system using function generator for [CY8CKIT-041S-MAX](https://www.infineon.com/CY8CKIT-041S-MAX)**
 
       ![](images/external-noise.png)
-    
+
     > **Note:** In the [CY8CKIT-041S-MAX](https://www.infineon.com/CY8CKIT-041S-MAX) kit, the physical GPIO Rx pins for the button widgets are not available on the kit to inject noise. A dummy widget is used to access the GPIO pins available on the board, as shown in Figure 16. Figure 10 shows the scan configuration settings for ganging the Rx pins of the button widgets with the available GPIO pin through the dummy widget.
 
       **Figure 10. Ganging the Rx pin of button widget with the dummy widget**
 
       ![](images/ganged-button0-rx.png)
- 
+
       **Figure 11. Using a Dummy widget for ganging purpose**
 
       ![](images/dummy-scan-config.png)
@@ -381,6 +382,7 @@ Document title: *CE237687* - *PSoC&trade; 4: CAPSENSE&trade; multi frequency sca
  ------- | ---------------------
  1.0.0   | New code example
  1.1.0   | Added support for new kits
+ 1.1.1   | Minor README updates
 
 
 <br>
